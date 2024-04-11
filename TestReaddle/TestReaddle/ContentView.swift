@@ -9,18 +9,20 @@ import SwiftUI
 
 struct ContentView: View {
 
+    @State var counter: Int = 1
+
     var body: some View {
-        VStack {
+        VStack(spacing: 50) {
             contentView
+            actionButton
         }
-//        .padding()
     }
 
     @ViewBuilder
     var contentView: some View {
         Grid(alignment: .center, verticalSpacing: 10) {
             GridRow {
-                rowContent
+                rowContent(count: counter)
             }
         }
         .background(.gray)
@@ -28,16 +30,34 @@ struct ContentView: View {
     }
 
     @ViewBuilder
-    var rowContent: some View {
+    func rowContent(count: Int) -> some View {
         ScrollView(.horizontal) {
-            HStack(spacing: 20) {
-                ForEach(0..<10) { _ in
-                    Color.red
-                        .frame(width: 100, height: 100)
+            ScrollViewReader { value in
+                HStack(spacing: 20) {
+                    ForEach(0..<count, id: \.self) { i in
+                        Color.red
+                            .frame(width: 100, height: 100)
+                    }
+                    .onChange(of: count) { oldValue, newValue in
+                        withAnimation(Animation.linear(duration: 2)) {
+                            value.scrollTo(count - 1)
+                        }
+                    }
                 }
             }
         }
         .frame(height: 150)
+    }
+
+    @ViewBuilder
+    var actionButton: some View {
+        Button(
+            action: {
+                counter += 1
+            },
+            label: {
+            Text("Add element")
+        })
     }
 }
 

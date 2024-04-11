@@ -7,14 +7,39 @@
 
 import SwiftUI
 
-//struct Item {
-//    let id = UUID()
-//}
+public protocol MyView {
+    init()
+    func add()
+    func removeElement(at index: Int)
+}
 
-struct ContentView: View {
+struct ContentView: View, MyView {
 
-    @State var array: [Int] = (0..<10).map { $0 }
-    @State var deletingIndex: Int = -1
+    @State private var array: [Int] = []
+
+    public init() {}
+
+    public func add() {
+        DispatchQueue.main.async {
+            self.addElement()
+        }
+    }
+
+    public func removeElement(at index: Int) {
+        DispatchQueue.main.async {
+            self.removeElement(at: index)
+        }
+    }
+
+    private func addElement() {
+        let last = array.last ?? -1
+        array.append(last + 1)
+    }
+
+    private func remove(at index: Int) {
+        guard array.count > index, index >= 0 else { return }
+        array.remove(at: index)
+    }
 
     var body: some View {
         VStack(spacing: 50) {
@@ -47,8 +72,10 @@ struct ContentView: View {
                             }
                     }
                     .onChange(of: array) { oldValue, newValue in
-                        withAnimation(Animation.linear(duration: 2)) {
-                            value.scrollTo(array.count - 1)
+                        if newValue.count > oldValue.count, let last = array.last {
+                            withAnimation(Animation.linear(duration: 2)) {
+                                value.scrollTo(last)
+                            }
                         }
                     }
                 }
@@ -62,8 +89,7 @@ struct ContentView: View {
     var actionButton: some View {
         Button(
             action: {
-                guard let last = array.last else { return }
-                array.append(last + 1)
+                addElement()
             },
             label: {
             Text("Add element")

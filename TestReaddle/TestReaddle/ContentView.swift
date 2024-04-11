@@ -7,9 +7,14 @@
 
 import SwiftUI
 
+//struct Item {
+//    let id = UUID()
+//}
+
 struct ContentView: View {
 
-    @State var counter: Int = 1
+    @State var array: [Int] = (0..<10).map { $0 }
+    @State var deletingIndex: Int = -1
 
     var body: some View {
         VStack(spacing: 50) {
@@ -22,7 +27,7 @@ struct ContentView: View {
     var contentView: some View {
         Grid(alignment: .center, verticalSpacing: 10) {
             GridRow {
-                rowContent(count: counter)
+                rowContent
             }
         }
         .background(.gray)
@@ -30,22 +35,26 @@ struct ContentView: View {
     }
 
     @ViewBuilder
-    func rowContent(count: Int) -> some View {
+    var rowContent: some View {
         ScrollView(.horizontal) {
             ScrollViewReader { value in
                 HStack(spacing: 20) {
-                    ForEach(0..<count, id: \.self) { i in
+                    ForEach(array, id: \.self) { element in
                         Color.red
                             .frame(width: 100, height: 100)
+                            .onTapGesture {
+                                array.removeAll { $0 == element }
+                            }
                     }
-                    .onChange(of: count) { oldValue, newValue in
+                    .onChange(of: array) { oldValue, newValue in
                         withAnimation(Animation.linear(duration: 2)) {
-                            value.scrollTo(count - 1)
+                            value.scrollTo(array.count - 1)
                         }
                     }
                 }
             }
         }
+        .animation(.spring(), value: array)
         .frame(height: 150)
     }
 
@@ -53,7 +62,8 @@ struct ContentView: View {
     var actionButton: some View {
         Button(
             action: {
-                counter += 1
+                guard let last = array.last else { return }
+                array.append(last + 1)
             },
             label: {
             Text("Add element")

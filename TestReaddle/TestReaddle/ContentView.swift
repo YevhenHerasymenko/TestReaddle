@@ -17,6 +17,9 @@ struct ContentView: View, MyView {
 
     @State private var array: [Int] = []
 
+    @State private var offset: CGFloat = 0
+    @State private var dragElement: Int?
+
     public init() {}
 
     public func add() {
@@ -65,11 +68,7 @@ struct ContentView: View, MyView {
             ScrollViewReader { value in
                 HStack(spacing: 20) {
                     ForEach(array, id: \.self) { element in
-                        Color.red
-                            .frame(width: 100, height: 100)
-                            .onTapGesture {
-                                array.removeAll { $0 == element }
-                            }
+                        cell(for: element)
                     }
                     .onChange(of: array) { oldValue, newValue in
                         if newValue.count > oldValue.count, let last = array.last {
@@ -79,10 +78,37 @@ struct ContentView: View, MyView {
                         }
                     }
                 }
+                .padding(40)
             }
         }
         .animation(.spring(), value: array)
         .frame(height: 150)
+    }
+
+    @ViewBuilder
+    func cell(for element: Int) -> some View {
+        Color.red
+            .frame(width: 100, height: 100)
+            .onTapGesture {
+                array.removeAll { $0 == element }
+            }
+            .offset(y: dragElement == element ? offset : 0)
+            .gesture(
+                DragGesture()
+                    .onChanged { gesture in
+                        dragElement = element
+                        offset = gesture.translation.height
+                    }
+                    .onEnded { _ in
+                        if abs(offset) > 50 {
+                            array.removeAll { $0 == element }
+                        } else {
+                            offset = .zero
+                        }
+                        offset = .zero
+                        dragElement = nil
+                    }
+            )
     }
 
     @ViewBuilder
